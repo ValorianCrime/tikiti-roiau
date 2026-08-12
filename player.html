@@ -1,1 +1,59 @@
-<!doctype html><html><head><meta charset="utf-8"></head><body><h1>Entrada do Jogador</h1><input placeholder="Nome"><p>Sessão: <span id="s"></span></p><script>document.getElementById('s').textContent=new URLSearchParams(location.search).get('session')||'-';</script></body></html>
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>Jogador</title>
+<style>
+body{
+  font-family:Segoe UI;
+  max-width:800px;
+  margin:auto;
+  padding:20px;
+}
+button{
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎮 Jogador</h1>
+
+<p>Sessão: <span id="session"></span></p>
+
+<input id="name" placeholder="Nome">
+
+<button onclick="join()">Entrar</button>
+
+<div id="game"></div>
+
+<script>
+
+const session =
+new URLSearchParams(location.search)
+.get("session") || "-";
+
+document.getElementById("session").innerText =
+session;
+
+async function join(){
+
+ const name =
+ document.getElementById("name").value;
+
+ if(!name){
+   alert("Indica o teu nome");
+   return;
+ }
+
+ document.getElementById("game").innerHTML = `
+   <h2>Bem-vindo ${name}</h2>
+   <p>✅ Registo efetuado</p>
+ `;
+}
+
+</script>
+
+</body>
+</html>
