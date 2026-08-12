@@ -1,110 +1,108 @@
 <!doctype html>
 <html lang="pt">
 <head>
+    <meta charset="utf-8">
+    <title>👑 Tikiti Roiau - Host</title>
 
-<meta charset="utf-8">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-<title>Host</title>
+    <style>
+        body{
+            font-family:Segoe UI,Arial,sans-serif;
+            max-width:900px;
+            margin:auto;
+            padding:20px;
+        }
 
-/qrcode/build/qrcode.min.js"></script>
+        button{
+            padding:12px 20px;
+            font-size:16px;
+            cursor:pointer;
+        }
 
-<style>
+        #sessionCode{
+            margin-top:20px;
+        }
 
-body{
- font-family:Segoe UI;
- max-width:900px;
- margin:auto;
- padding:20px;
-}
-
-button{
- padding:12px;
-}
-
-</style>
-
+        #qr{
+            margin-top:20px;
+        }
+    </style>
 </head>
 
 <body>
 
-<h1>👑 Painel do Anfitrião</h1>
+    <h1>👑 Painel do Anfitrião</h1>
 
-<button onclick="createSession()">
+    <button onclick="createSession()">
+        Criar Sessão
+    </button>
 
-Criar Sessão
+    <h2 id="sessionCode"></h2>
 
-</button>
+    <canvas id="qr"></canvas>
 
-<h2 id="sessionCode"></h2>
+    <script type="module">
 
-<canvas id="qr"></canvas>
+        import { initializeApp }
+        from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+        import {
+            getFirestore,
+            doc,
+            setDoc
+        }
+        from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-<script type="module">
+        const firebaseConfig = {
+            apiKey: "AIzaSyB_ktbkHUHZcO8Q21BDCBxcB_Hjwk27zWQ",
+            authDomain: "tikiti-roiau.firebaseapp.com",
+            projectId: "tikiti-roiau",
+            storageBucket: "tikiti-roiau.firebasestorage.app",
+            messagingSenderId: "297279976355",
+            appId: "1:297279976355:web:1fe01b6b2636ee43dee016"
+        };
 
-import {
- initializeApp
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-import {
- getFirestore,
- doc,
- setDoc
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        window.createSession = async function () {
 
-const firebaseConfig = {
+            const code =
+                Math.random()
+                .toString(36)
+                .substring(2, 8)
+                .toUpperCase();
 
- apiKey: "AIzaSyB_ktbkHUHZcO8Q21BDCBxcB_Hjwk27zWQ",
- authDomain: "tikiti-roiau.firebaseapp.com",
- projectId: "tikiti-roiau",
- storageBucket: "tikiti-roiau.firebasestorage.app",
- messagingSenderId: "297279976355",
- appId: "1:297279976355:web:1fe01b6b2636ee43dee016"
+            await setDoc(
+                doc(db, "sessions", code),
+                {
+                    status: "waiting",
+                    createdAt: new Date().toISOString()
+                }
+            );
 
-};
+            document.getElementById("sessionCode").innerText =
+                "Sessão: " + code;
 
-const app = initializeApp(firebaseConfig);
+            const playerUrl =
+                location.origin +
+                location.pathname.replace(
+                    "host.html",
+                    "player.html"
+                ) +
+                "?session=" +
+                code;
 
-const db = getFirestore(app);
+            const canvas = document.getElementById("qr");
 
-window.createSession = async function(){
+            QRCode.toCanvas(
+                canvas,
+                playerUrl
+            );
+        };
 
- const code =
- Math.random()
- .toString(36)
- .substring(2,8)
- .toUpperCase();
-
- await setDoc(
-   doc(db,"sessions",code),
-   {
-     status:"waiting",
-     createdAt:new Date().toISOString()
-   }
- );
-
- document.getElementById("sessionCode").innerText =
- "Sessão: " + code;
-
- const playerUrl =
- location.origin +
- location.pathname.replace(
- "host.html",
- "player.html"
- ) +
- "?session=" +
- code;
-
- QRCode.toCanvas(
-   document.getElementById("qr"),
-   playerUrl
- );
-}
-
-</script>
+    </script>
 
 </body>
 </html>
