@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt">
+
 <head>
     <meta charset="utf-8">
     <title>👑 Tikiti Roiau - Host</title>
@@ -7,25 +8,29 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
     <style>
-        body{
-            font-family:Segoe UI,Arial,sans-serif;
-            max-width:900px;
-            margin:auto;
-            padding:20px;
+        body {
+            font-family: Segoe UI, Arial, sans-serif;
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
         }
 
-        button{
-            padding:12px 20px;
-            font-size:16px;
-            cursor:pointer;
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
 
-        #sessionCode{
-            margin-top:20px;
+        #sessionCode {
+            margin-top: 20px;
         }
 
-        #qr{
-            margin-top:20px;
+        #qr {
+            margin-top: 20px;
+        }
+
+        #players {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -42,17 +47,23 @@
 
     <canvas id="qr"></canvas>
 
+    <h2>Jogadores</h2>
+
+    <ul id="players"></ul>
+
     <script type="module">
 
         import { initializeApp }
-        from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+            from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
         import {
             getFirestore,
             doc,
-            setDoc
+            setDoc,
+            collection,
+            onSnapshot
         }
-        from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+            from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB_ktbkHUHZcO8Q21BDCBxcB_Hjwk27zWQ",
@@ -70,9 +81,9 @@
 
             const code =
                 Math.random()
-                .toString(36)
-                .substring(2, 8)
-                .toUpperCase();
+                    .toString(36)
+                    .substring(2, 8)
+                    .toUpperCase();
 
             await setDoc(
                 doc(db, "sessions", code),
@@ -94,15 +105,44 @@
                 "?session=" +
                 code;
 
-            const canvas = document.getElementById("qr");
-
             QRCode.toCanvas(
-                canvas,
+                document.getElementById("qr"),
                 playerUrl
             );
+
+            const playersRef =
+                collection(
+                    db,
+                    "sessions",
+                    code,
+                    "players"
+                );
+
+            onSnapshot(playersRef, (snapshot) => {
+
+                const ul =
+                    document.getElementById("players");
+
+                ul.innerHTML = "";
+
+                snapshot.forEach((player) => {
+
+                    const li =
+                        document.createElement("li");
+
+                    li.textContent =
+                        player.data().name;
+
+                    ul.appendChild(li);
+
+                });
+
+            });
+
         };
 
     </script>
 
 </body>
+
 </html>
