@@ -49,6 +49,10 @@
 
     <h2>Jogadores</h2>
 
+    <p id="readyCount">
+    Prontos: 0
+    </p>
+
     <ul id="players"></ul>
 
     <script type="module">
@@ -125,17 +129,35 @@
 
                 ul.innerHTML = "";
 
+                let readyPlayers = 0;
+
                 snapshot.forEach((player) => {
 
                     const li =
                         document.createElement("li");
 
+                    const playerData =
+                    player.data();
+
+                    const ready =
+                        playerData.picks &&
+                        playerData.picks.length === 3;
+
+                        if(ready){
+                        readyPlayers++;
+                        }
                     li.textContent =
-                        player.data().name;
+                        (ready ? "✅ " : "⏳ ")
+                        + playerData.name;
 
                     ul.appendChild(li);
 
                 });
+
+                document.getElementById(
+                    "readyCount"
+                ).innerText =
+                `Prontos: ${readyPlayers}/${snapshot.size}`;
 
             });
 
