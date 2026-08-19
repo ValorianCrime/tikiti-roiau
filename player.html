@@ -42,6 +42,9 @@ setDoc
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+import { WORDS } from "./js/words.js";
+
+
 const firebaseConfig = {
 
   apiKey: "AIzaSyB_ktbkHUHZcO8Q21BDCBxcB_Hjwk27zWQ",
@@ -56,30 +59,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const WORDS = [
-"Tikiti",
-"Pissuau",
-"Popapi",
-"Piching",
-"Outiluqui",
-"Helpi Desqui",
-"Upigraidi",
-"Maxteri",
-"Tímis",
-"Xerpointi",
-"Uãndráivi",
-"Pléner",
-"Mitingui",
-"Déploi",
-"Béquepi",
-"Fáiruóu",
-"Sêrveri",
-"Déshibórdi",
-"Tréquingui",
-"Réporti",
-"Sprinti",
-"Stêndapi"
-];
+let picks = [];
 
 const session =
 new URLSearchParams(location.search)
@@ -89,17 +69,20 @@ document.getElementById("session").innerText =
 session;
 
 window.join = async function(){
+picks = [];
 
- const name =
+const name =
  document.getElementById("name").value.trim();
+
+window.playerName = name;
 
  if(!name){
    alert("Indica o teu nome");
    return;
  }
 
- const playerId =
- crypto.randomUUID();
+const playerId = crypto.randomUUID();
+window.playerId = playerId;
 
  await setDoc(
    doc(
@@ -122,8 +105,8 @@ window.join = async function(){
    <p>Registado na sessão ${session}</p>
  `;
 
- const selected =
-    WORDS
+const selected =
+    [...WORDS]
         .sort(() => Math.random() - 0.5)
         .slice(0, 9);
 
@@ -142,10 +125,54 @@ selected.forEach(word => {
 
     button.style.margin = "5px";
 
+    button.onclick = async () => {
+
+        if (button.classList.contains("selected")) {
+            return;
+        }
+
+        if (picks.length >= 3) {
+            return;
+        }
+
+        picks.push(word);
+        button.classList.add("selected");
+
+
+        button.style.background = "#0078d4";
+        button.style.color = "white";
+
+        if (picks.length === 3) {
+
+            document.querySelectorAll("#words button")
+                .forEach(b => b.disabled = true);
+
+            await setDoc(
+                doc(
+                    db,
+                    "sessions",
+                    session,
+                    "players",
+                    playerId
+                ),
+                {
+                    name,
+                    hits: 0,
+                    winner: false,
+                    joinedAt: new Date().toISOString(),
+                    picks
+                }
+            );
+
+            wordsDiv.innerHTML += `
+                <h3>🔒 Aposta registada</h3>
+                <p>${picks.join(" • ")}</p>
+            `;
+        }
+    };
+
     wordsDiv.appendChild(button);
-
 });
-
 }
 
 </script>
