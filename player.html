@@ -28,6 +28,8 @@ button{
 
 <div id="game"></div>
 
+<div id="words"></div>
+
 <script type="module">
 
 import { initializeApp }
@@ -53,6 +55,31 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+const WORDS = [
+"Tikiti",
+"Pissuau",
+"Popapi",
+"Piching",
+"Outiluqui",
+"Helpi Desqui",
+"Upigraidi",
+"Maxteri",
+"Tímis",
+"Xerpointi",
+"Uãndráivi",
+"Pléner",
+"Mitingui",
+"Déploi",
+"Béquepi",
+"Fáiruóu",
+"Sêrveri",
+"Déshibórdi",
+"Tréquingui",
+"Réporti",
+"Sprinti",
+"Stêndapi"
+];
 
 const session =
 new URLSearchParams(location.search)
@@ -94,6 +121,31 @@ window.join = async function(){
    <h2>✅ Bem-vindo ${name}</h2>
    <p>Registado na sessão ${session}</p>
  `;
+
+ const selected =
+    WORDS
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 9);
+
+const wordsDiv =
+    document.getElementById("words");
+
+wordsDiv.innerHTML =
+    "<h2>Escolhe 3 palavras</h2>";
+
+selected.forEach(word => {
+
+    const button =
+        document.createElement("button");
+
+    button.textContent = word;
+
+    button.style.margin = "5px";
+
+    wordsDiv.appendChild(button);
+
+});
+
 }
 
 </script>
