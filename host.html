@@ -1,47 +1,46 @@
 <!doctype html>
 <html lang="pt">
-
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
     <title>👑 Tikiti Roiau - Host</title>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
     <style>
-        body {
-            font-family: Segoe UI, Arial, sans-serif;
-            max-width: 900px;
-            margin: auto;
-            padding: 20px;
-        }
+      body {
+        font-family:
+          Segoe UI,
+          Arial,
+          sans-serif;
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+      }
 
-        button {
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+      button {
+        padding: 12px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
 
-        #sessionCode {
-            margin-top: 20px;
-        }
+      #sessionCode {
+        margin-top: 20px;
+      }
 
-        #qr {
-            margin-top: 20px;
-        }
+      #qr {
+        margin-top: 20px;
+      }
 
-        #players {
-            margin-top: 20px;
-        }
+      #players {
+        margin-top: 20px;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <h1>👑 Painel do Anfitrião</h1>
 
-    <button onclick="createSession()">
-        Criar Sessão
-    </button>
+    <button onclick="createSession()">Criar Sessão</button>
 
     <h2 id="sessionCode"></h2>
 
@@ -50,128 +49,109 @@
     <h2>Jogadores</h2>
 
     <p id="playerStats">
-    👥 Jogadores: 0
-    <br>
-    ✅ Prontos: 0
+      👥 Jogadores: 0
+      <br />
+      ✅ Prontos: 0
     </p>
 
     <ul id="players"></ul>
 
+    <button id="startBtn" onclick="startRoiau()">🚀 Iniciar Roiau</button>
+
+    <div id="gamePanel"></div>
+
     <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-        import { initializeApp }
-            from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+      import {
+        getFirestore,
+        doc,
+        setDoc,
+        updateDoc,
+        collection,
+        onSnapshot,
+        arrayUnion,
+      } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-        import {
-            getFirestore,
-            doc,
-            setDoc,
-            collection,
-            onSnapshot
-        }
-            from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+      const firebaseConfig = {
+        apiKey: "AIzaSyB_ktbkHUHZcO8Q21BDCBxcB_Hjwk27zWQ",
+        authDomain: "tikiti-roiau.firebaseapp.com",
+        projectId: "tikiti-roiau",
+        storageBucket: "tikiti-roiau.firebasestorage.app",
+        messagingSenderId: "297279976355",
+        appId: "1:297279976355:web:1fe01b6b2636ee43dee016",
+      };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB_ktbkHUHZcO8Q21BDCBxcB_Hjwk27zWQ",
-            authDomain: "tikiti-roiau.firebaseapp.com",
-            projectId: "tikiti-roiau",
-            storageBucket: "tikiti-roiau.firebasestorage.app",
-            messagingSenderId: "297279976355",
-            appId: "1:297279976355:web:1fe01b6b2636ee43dee016"
-        };
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+      let currentSession = null;
 
-        window.createSession = async function () {
+      window.createSession = async function () {
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-            const code =
-                Math.random()
-                    .toString(36)
-                    .substring(2, 8)
-                    .toUpperCase();
+        await setDoc(doc(db, "sessions", code), {
+          status: "waiting",
+          createdAt: new Date().toISOString(),
+        });
 
-            await setDoc(
-                doc(db, "sessions", code),
-                {
-                    status: "waiting",
-                    createdAt: new Date().toISOString()
-                }
-            );
+        document.getElementById("sessionCode").innerText = "Sessão: " + code;
 
-            document.getElementById("sessionCode").innerText =
-                "Sessão: " + code;
+        currentSession = code;
+        
+        const playerUrl =
+          location.origin +
+          location.pathname.replace("host.html", "player.html") +
+          "?session=" +
+          code;
 
-            const playerUrl =
-                location.origin +
-                location.pathname.replace(
-                    "host.html",
-                    "player.html"
-                ) +
-                "?session=" +
-                code;
+        QRCode.toCanvas(document.getElementById("qr"), playerUrl);
 
-            QRCode.toCanvas(
-                document.getElementById("qr"),
-                playerUrl
-            );
+        const playersRef = collection(db, "sessions", code, "players");
+        
+        onSnapshot(playersRef, (snapshot) => {
+          const ul = document.getElementById("players");
 
-            const playersRef =
-                collection(
-                    db,
-                    "sessions",
-                    code,
-                    "players"
-                );
+          ul.innerHTML = "";
 
-            onSnapshot(playersRef, (snapshot) => {
+          let readyPlayers = 0;
 
-                const ul =
-                    document.getElementById("players");
+          snapshot.forEach((player) => {
+            const li = document.createElement("li");
 
-                ul.innerHTML = "";
+            const playerData = player.data();
 
-                let readyPlayers = 0;
+            const ready = playerData.picks && playerData.picks.length === 3;
 
-                snapshot.forEach((player) => {
+            if (ready) {
+              readyPlayers++;
+            }
+            li.textContent = (ready ? "✅ " : "⏳ ") + playerData.name;
 
-                    const li =
-                        document.createElement("li");
+            ul.appendChild(li);
+          });
 
-                    const playerData =
-                    player.data();
-
-                    const ready =
-                        playerData.picks &&
-                        playerData.picks.length === 3;
-
-                        if(ready){
-                        readyPlayers++;
-                        }
-                    li.textContent =
-                        (ready ? "✅ " : "⏳ ")
-                        + playerData.name;
-
-                    ul.appendChild(li);
-
-                });
-
-                document.getElementById(
-                    "playerStats"
-                ).innerHTML =
-                `
+          document.getElementById("playerStats").innerHTML = `
                 👥 Jogadores: ${snapshot.size}
                 <br>
                 ✅ Prontos: ${readyPlayers}
                 `;
+        });
+      };
 
+      window.startRoiau = async function () {
+        if (!currentSession) {
+          alert("Cria uma sessão primeiro.");
+          return;
+        }
 
-            });
+        await updateDoc(doc(db, "sessions", currentSession), {
+          status: "running",
+          calledWords: [],
+        });
 
-        };
-
+        renderWords();
+      };
     </script>
-
-</body>
-
+  </body>
 </html>
