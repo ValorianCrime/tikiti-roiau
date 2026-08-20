@@ -38,7 +38,9 @@ from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
 getFirestore,
 doc,
-setDoc
+setDoc,
+collection,
+getDocs
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
@@ -80,6 +82,41 @@ window.playerName = name;
    alert("Indica o teu nome");
    return;
  }
+ const playersSnapshot =
+    await getDocs(
+        collection(
+            db,
+            "sessions",
+            session,
+            "players"
+        )
+    );
+
+let duplicate = false;
+
+playersSnapshot.forEach(player => {
+
+    const existingName =
+        player.data().name;
+
+    if (
+        existingName.toLowerCase()
+        ===
+        name.toLowerCase()
+    ) {
+        duplicate = true;
+    }
+
+});
+
+if (duplicate) {
+
+    alert(
+        "Já existe um jogador com esse nome nesta sessão."
+    );
+
+    return;
+}
 
 const playerId = crypto.randomUUID();
 window.playerId = playerId;

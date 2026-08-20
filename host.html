@@ -49,8 +49,10 @@
 
     <h2>Jogadores</h2>
 
-    <p id="readyCount">
-    Prontos: 0
+    <p id="playerStats">
+    👥 Jogadores: 0
+    <br>
+    ✅ Prontos: 0
     </p>
 
     <ul id="players"></ul>
@@ -155,9 +157,14 @@
                 });
 
                 document.getElementById(
-                    "readyCount"
-                ).innerText =
-                `Prontos: ${readyPlayers}/${snapshot.size}`;
+                    "playerStats"
+                ).innerHTML =
+                `
+                👥 Jogadores: ${snapshot.size}
+                <br>
+                ✅ Prontos: ${readyPlayers}
+                `;
+
 
             });
 
